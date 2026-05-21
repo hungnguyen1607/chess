@@ -40,10 +40,6 @@ class Board
     positions
   end
 
-  # Very simple move generator: all in-bounds squares that are not
-  # occupied by the same color. This is intentionally permissive
-  # (doesn't enforce piece-specific movement rules) and will be
-  # refined later for full legality checks.
   def possible_moves_from(row, col)
     piece = piece_at(row, col)
     return [] unless piece
@@ -79,5 +75,38 @@ class Board
       puts "#{rank} #{row_data}"
     end
   end
+  
+  def in_check?(color)
+    king_pos = nil
+    @grid.each_with_index do |row, r|
+      row.each_with_index do |cell, c|
+        king_pos = [r, c] if cell && cell.is_a?(King) && cell.color == color
+      end
+    end
+    return false unless king_pos
+
+    opponent_color = color == :white ? :black : :white
+    @grid.each_with_index do |row, r|
+      row.each_with_index do |cell, c|
+        next unless cell && cell.color == opponent_color
+        return true if possible_moves_from(r, c).include?(king_pos)
+      end
+    end
+    false
+  end
+
+  def checkmate?(color)
+    return false unless in_check?(color)
+
+    @grid.each_with_index do |row, r|
+      row.each_with_index do |cell, c|
+        next unless cell && cell.color == color
+        return false unless possible_moves_from(r, c).empty?
+      end
+    end
+    true
+  end
+
+
 end
 
