@@ -48,7 +48,7 @@ class Board
     (0..7).each do |r|
       (0..7).each do |c|
         next if r == row && c == col
-        next if piece_at(r, c) && piece_at(r, c).color == piece.color
+        next unless piece.move_valid?(row, col, r, c, self)
         moves << [r, c]
       end
     end
@@ -101,7 +101,7 @@ class Board
     @grid.each_with_index do |row, r|
       row.each_with_index do |cell, c|
         next unless cell && cell.color == color
-        return false unless possible_moves_from(r, c).empty?
+        return false if possible_moves_from(r, c).any?
       end
     end
     true

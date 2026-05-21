@@ -1,6 +1,6 @@
 require_relative 'board'
 require_relative 'piece'
-
+require 'yaml'
 class Game
   FILES = %w[a b c d e f g h].freeze
 
@@ -20,7 +20,12 @@ class Game
 
       if perform_move(from, to)
         switch_turn
-
+        if @board.checkmate?(@current_color)
+          puts "Checkmate! #{@current_color} loses!"
+          break
+        elsif @board.in_check?(@current_color)
+          puts "Check! #{@current_color} is in check!"
+        end
         # If AI is enabled and it's the AI's turn, perform AI move
         if @ai_enabled && @current_color == :black
           ai_move
@@ -44,6 +49,14 @@ class Game
     input = gets&.strip
     return unless input
 
+    if input.downcase == 'save'
+      save_game
+      return
+    elsif input.downcase == 'load'
+      load_game
+      return
+    end
+    
     parts = input.split
     if parts.size == 2
       parts
@@ -121,5 +134,33 @@ class Game
   def prompt_continue
     print 'Press Enter to continue...'
     gets
+  end
+
+  def in_check?
+    @board.in_check?(@current_color)
+  end
+
+
+  def save_game
+    File.open('chess_save.yml', 'w') do |file|
+      file.write(YAML.dump({
+        board: @board,
+        current_color: @current_color,
+        ai_enabled: @ai_enabled
+      }))
+    end
+    puts 'Game saved to chess_save.yml'
+  end
+
+  def load_game
+    if File.exist?('chess_save.yml')
+      data = YAML.load_file('chess_save.yml')
+      @board = data[:board]
+      @current_color = data[:current_color]
+      @ai_enabled = data[:ai_enabled]
+      puts 'Game loaded from chess_save.yml'
+    else
+      puts 'No saved game found.'
+    end
   end
 end
